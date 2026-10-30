@@ -41,6 +41,7 @@ const gamePauseDialog = $('#game-pause-dialog');
 const gameHelpDialog = $('#game-help-dialog');
 const gameSettingsDialog = $('#game-settings-dialog');
 const levelNoticeDialog = $('#level-notice-dialog');
+const levelDevelopmentOverlay = $('#level-development-overlay');
 const musicAudioButtons = $$('[data-audio-toggle="music"]');
 const characterSoundsButtons = $$('[data-audio-toggle="character-sounds"]');
 const dialogCloseTimers = new Map();
@@ -281,29 +282,31 @@ function enterLevel(levelId) {
   const level = LEVELS.find((item) => item.id === levelId);
   if (!level || !isLevelUnlocked(level)) return;
 
-  // За пределами доступных трёх уровней показываем уведомление о разработке.
-  if (![1, 2, 3].includes(levelId)) {
-    const title = $('#level-notice-title');
-    const description = $('#level-notice-description');
-    if (title) title.textContent = `Уровень ${level.id} — скоро`;
-    if (description) {
-      description.textContent = 'Этот уровень пока находится в разработке. Пройдите доступные уровни, чтобы продолжить путешествие.';
-    }
-    openDialog(levelNoticeDialog);
-    return;
-  }
-
+  // На третьем уровне показываем настоящую карту под затемнённым слоем,
+  // но игровой цикл не запускаем: уровень пока нельзя проходить.
   clearTouchPointers();
   currentLevelId = levelId;
   game.setLevel(levelId);
   audio.activate();
+  if (levelDevelopmentOverlay) levelDevelopmentOverlay.hidden = levelId !== 3;
   showScreen('game-screen');
+
+  if (levelId === 3) {
+    game.stopLoop();
+    input.setActive?.(false);
+    input.endFrame?.();
+    game.updateControlButtons();
+    game.render();
+    return;
+  }
+
   game.start();
 }
 
 function returnToLevelSelect() {
   clearTouchPointers();
   if (game.gameState === 'playing') game.pause();
+  if (levelDevelopmentOverlay) levelDevelopmentOverlay.hidden = true;
   renderLevelTree();
   showScreen('level-select-screen');
 }

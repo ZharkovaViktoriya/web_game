@@ -2505,3 +2505,107 @@ dialog.menu-dialog::backdrop {
   .level-select-screen .level-node-star-icons { font-size: 13px !important; }
   .level-select-screen .level-node-star-count { font-size: 9px !important; }
 }
+
+
+/* Level 3 development screen: retain the live map behind a dimmed veil. */
+.level-development-overlay {
+  position: absolute;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: auto;
+  background: rgba(4, 7, 13, 0.58);
+  -webkit-backdrop-filter: brightness(0.43) saturate(0.58);
+  backdrop-filter: brightness(0.43) saturate(0.58);
+  cursor: default;
+}
+.level-development-overlay[hidden] { display: none !important; }
+.level-development-card {
+  position: relative;
+  width: min(470px, 100%);
+  padding: clamp(25px, 5vw, 42px) clamp(21px, 5vw, 40px) clamp(23px, 4vw, 34px);
+  text-align: center;
+  color: #f4ead4;
+  background: linear-gradient(145deg, rgba(24, 31, 44, 0.98), rgba(10, 15, 25, 0.99));
+  border: 1px solid rgba(220, 190, 129, 0.58);
+  border-radius: 7px;
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.65), inset 0 1px rgba(255, 244, 213, 0.07), 0 0 0 5px rgba(221, 188, 125, 0.055);
+}
+.level-development-card::before,
+.level-development-card::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(222, 190, 128, 0.55), transparent);
+}
+.level-development-card::before { top: 10px; }
+.level-development-card::after { bottom: 10px; }
+.development-emblem {
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  margin: 0 auto 19px;
+  border: 1px solid rgba(231, 199, 137, 0.62);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(218, 178, 104, 0.17), rgba(10, 15, 25, 0.6) 70%);
+  box-shadow: 0 0 28px rgba(216, 173, 97, 0.1), inset 0 0 14px rgba(216, 173, 97, 0.06);
+}
+.development-emblem-core {
+  color: #e6c58a;
+  font-family: var(--font-ancient);
+  font-size: 25px;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 16px rgba(225, 185, 111, 0.28);
+}
+.development-eyebrow {
+  margin: 0 0 10px;
+  color: #c7a96d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+.level-development-card h2 {
+  margin: 0 0 13px;
+  color: #fff3d9;
+  font-family: var(--font-ancient);
+  font-size: clamp(23px, 4vw, 32px);
+  font-weight: 600;
+  line-height: 1.17;
+  text-wrap: balance;
+}
+.level-development-description {
+  max-width: 350px;
+  margin: 0 auto 25px;
+  color: #a9b2c2;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.level-development-back {
+  min-height: 44px;
+  width: 100%;
+  padding: 10px 16px;
+  color: #1a1a20;
+  background: linear-gradient(180deg, #ead09b, #c9a766);
+  border: 1px solid #f1dcae;
+  border-radius: 4px;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  cursor: pointer;
+  transition: filter 140ms ease, transform 140ms ease;
+}
+.level-development-back:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.level-development-back:active { transform: translateY(1px); }
+.level-development-back:focus-visible { outline: 2px solid #fff0cb; outline-offset: 4px; }
+@media (max-width: 480px) {
+  .level-development-overlay { padding: 16px; }
+  .level-development-card { padding-inline: 20px; }
+  .development-emblem { width: 55px; height: 55px; margin-bottom: 15px; }
+  .level-development-description { font-size: 11px; margin-bottom: 20px; }
+}

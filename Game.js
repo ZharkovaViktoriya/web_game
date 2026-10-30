@@ -41,36 +41,35 @@ const LEVEL_GRID = [
 ];
 
 const LEVEL_TWO_GRID = [
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.............................###############",
-  "###.........................................###",
-  "###...................####..................###",
-  "###.........................................###",
-  "###...........................###...........###",
-  "###...............................####......###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.............................####........###",
-  "###.........................................###",
-  "###..................MM.....................###",
-  "###..................MM.....................###",
-  "###..................#####......####........###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###..............####.......................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "###.........................................###",
-  "##########............#####............########",
-  "##########............#####............########",
+  "...............................................",
+  "...............................................",
+  "....................................###########",
+  "...............................................",
+  "...............................................",
+  "...............................................",
+  // Вырез под лифтом: оставлен достаточный вертикальный просвет для персонажа.
+  "..........######....###########................",
+  "..........................................#####",
+  "..........................................#####",
+  "......................................#########",
+  "...............................................",
+  "###########....................................",
+  "...............................................",
+  "...............................................",
+  "...............................................",
+  "...............................................",
+  "...............................................",
+  "...............................................",
+  "...............................................",
+  ".................######...............###......",
+  "...............................................",
+  "...............................................",
+  "...............................................",
+  "..........................................#####",
+  "..........................................#####",
+  "..........................................#####",
+  "..........................................#####",
+  "############.........#######.......############",
 ];
 
 // Карта уровня 3 в том же формате, что и остальные уровни: # — платформа, . — пустая клетка.
@@ -308,74 +307,119 @@ export default class Game {
   createLevelTwoConfig() {
     const grid = LEVEL_TWO_GRID;
     const buttons = [
-      // Огонь пересекает лаву и удерживает первую плиту, пока команда садится на лифт A.
-      { id: 'button-one', x: 460, y: 560, width: 40, height: 20, mode: 'pressure', requiredType: 'FIRE', accent: '#ff754f', bright: '#ffe19a', dark: '#8c3027', pressed: false, activated: false, compression: 0 },
-      // Вода удерживает плиту B, чтобы лифт B опустился к площадке; затем отпускает её и едет наверх.
-      { id: 'button-two', x: 340, y: 400, width: 40, height: 20, mode: 'pressure', requiredType: 'WATER', accent: '#4bc7f0', bright: '#d1ffff', dark: '#174fbd', pressed: false, activated: false, compression: 0 },
-      // Земля толкает камень по кислотоустойчивой площадке на третью плиту, удерживая нижние ворота открытыми.
-      { id: 'button-three', x: 480, y: 320, width: 40, height: 20, mode: 'pressure', requiredType: 'EARTH', accent: '#75c878', bright: '#d8ffad', dark: '#378452', allowRock: true, pressed: false, activated: false, compression: 0 },
+      // Воздух удерживает бирюзовую плиту: лифт слева опускается.
+      { id: 'button-air', x: 44 * TILE_SIZE, y: 6 * TILE_SIZE, width: 2 * TILE_SIZE, height: TILE_SIZE,
+        mode: 'pressure', requiredType: 'AIR', accent: '#44e6c0', bright: '#c9fff3', dark: '#126f67', border: '#a5fff0',
+        pressed: false, activated: false, compression: 0 },
+      // Вода удерживает плиту на среднем мосту, опуская синий лифт к нижнему маршруту.
+      { id: 'button-water', x: 18 * TILE_SIZE, y: 18 * TILE_SIZE, width: 2 * TILE_SIZE, height: TILE_SIZE,
+        mode: 'pressure', requiredType: 'WATER', accent: '#49748e', bright: '#c1e9ff', dark: '#1b4258', border: '#a4d8f1',
+        pressed: false, activated: false, compression: 0 },
+      // Огонь включает красный лифт с безопасного островка между лавой и водой.
+      { id: 'button-fire', x: 23 * TILE_SIZE, y: 26 * TILE_SIZE, width: 2 * TILE_SIZE, height: TILE_SIZE,
+        mode: 'pressure', requiredType: 'FIRE', accent: '#e53c3c', bright: '#ffc2c2', dark: '#7d252b', border: '#ff8b8b',
+        pressed: false, activated: false, compression: 0 },
+      // Земля удерживает зелёную плиту, убирая стену на дальнем левом пути.
+      { id: 'button-earth', x: 44 * TILE_SIZE, y: 22 * TILE_SIZE, width: 2 * TILE_SIZE, height: TILE_SIZE,
+        mode: 'pressure', requiredType: 'EARTH', accent: '#5b9952', bright: '#d7ffb7', dark: '#2b5f32', border: '#a5dc8e',
+        pressed: false, activated: false, compression: 0 },
+      // Камень должен полностью лечь на серую плиту, чтобы опустить вертикальный лифт.
+      { id: 'button-stone', x: 1 * TILE_SIZE, y: 10 * TILE_SIZE, width: 2 * TILE_SIZE, height: TILE_SIZE,
+        mode: 'pressure', rockOnly: true, allowRock: true, accent: '#7b7b7b', bright: '#e1e1e1', dark: '#44484e', border: '#bdbdbd',
+        pressed: false, activated: false, compression: 0 },
     ];
+
     const buttonPlatforms = buttons.map((button) => ({
       id: `${button.id}-platform`, x: button.x, y: button.y,
       width: button.width, height: button.height, type: 'button-platform', buttonId: button.id,
     }));
+
     const lifts = [
       {
-        // Лифт A опускается к лавовому каналу, когда Огонь удерживает плиту,
-        // а после отпускания поднимает пассажиров к центральной площадке.
-        id: 'white-lift-one', x: 260, y: 360, width: 80, height: 20,
-        type: 'moving-platform', role: 'white-lift', restY: 360, targetY: 360,
-        activatedY: 540, speed: 55, enabled: false, activation: 'button-one', solidWhenRest: true,
+        // Бирюзовый лифт: единственная видимая стартовая позиция — верхняя;
+        // при удержании кнопки он опускается на уровень нижней метки со схемы.
+        id: 'air-lift', x: 16 * TILE_SIZE, y: 7 * TILE_SIZE, width: 4 * TILE_SIZE, height: TILE_SIZE,
+        type: 'moving-platform', role: 'air-lift', accent: '#44e6c0', bright: '#c9fff3', dark: '#126f67',
+        restY: 7 * TILE_SIZE, targetY: 7 * TILE_SIZE, activatedY: 12 * TILE_SIZE,
+        speed: 90, enabled: false, activation: 'button:button-air', solidWhenRest: true,
       },
       {
-        // Лифт B работает в пустой шахте, не пересекающей каменные площадки.
-        id: 'purple-lift-two', x: 540, y: 220, width: 80, height: 20,
-        type: 'moving-platform', role: 'purple-lift', restY: 220, targetY: 220,
-        activatedY: 400, speed: 55, enabled: false, activation: 'button:button-two', solidWhenRest: true,
+        // Синий лифт опускается к нижнему ярусу, пока Вода удерживает кнопку.
+        id: 'water-lift', x: 26 * TILE_SIZE, y: 14 * TILE_SIZE, width: 4 * TILE_SIZE, height: TILE_SIZE,
+        type: 'moving-platform', role: 'water-lift', accent: '#49748e', bright: '#c1e9ff', dark: '#1b4258',
+        restY: 14 * TILE_SIZE, targetY: 14 * TILE_SIZE, activatedY: 24 * TILE_SIZE,
+        speed: 90, enabled: false, activation: 'button:button-water', solidWhenRest: true,
+      },
+      {
+        // Красный лифт опускается к островку над лавой при удержании красной кнопки.
+        id: 'fire-lift', x: 13 * TILE_SIZE, y: 19 * TILE_SIZE, width: 4 * TILE_SIZE, height: TILE_SIZE,
+        type: 'moving-platform', role: 'fire-lift', accent: '#a24b4b', bright: '#ffd0d0', dark: '#68252b',
+        restY: 19 * TILE_SIZE, targetY: 19 * TILE_SIZE, activatedY: 24 * TILE_SIZE,
+        speed: 75, enabled: false, activation: 'button:button-fire', solidWhenRest: true,
+      },
+      {
+        // Жёлтый лифт начинает снизу и поднимается к платформе у выходов после рычага.
+        id: 'yellow-lift', x: 33 * TILE_SIZE, y: 16 * TILE_SIZE, width: 3 * TILE_SIZE, height: TILE_SIZE,
+        type: 'moving-platform', role: 'yellow-lift', accent: '#caaf43', bright: '#fff0ad', dark: '#66531a',
+        restY: 16 * TILE_SIZE, targetY: 16 * TILE_SIZE, activatedY: 2 * TILE_SIZE,
+        speed: 95, enabled: false, activation: 'lever:lever-yellow', solidWhenRest: true,
+      },
+      {
+        // Серый вертикальный подъёмник перемещается вниз по шахте;
+        // длинный путь из схемы не рисуется — отображается только сам подвижный блок.
+        id: 'gray-vertical-lift', x: 31 * TILE_SIZE, y: 0, width: TILE_SIZE, height: 11 * TILE_SIZE,
+        type: 'moving-platform', role: 'gray-lift', accent: '#7b7b7b', bright: '#dedede', dark: '#45484d',
+        restY: 0, targetY: 0, activatedY: 17 * TILE_SIZE,
+        speed: 95, enabled: false, activation: 'button:button-stone', solidWhenRest: true,
       },
     ];
+
+    const finishes = [
+      { type: 'FIRE',  x: 36 * TILE_SIZE, y: 0, width: 2 * TILE_SIZE, height: 2 * TILE_SIZE },
+      { type: 'WATER', x: 39 * TILE_SIZE, y: 0, width: 2 * TILE_SIZE, height: 2 * TILE_SIZE },
+      { type: 'EARTH', x: 42 * TILE_SIZE, y: 0, width: 2 * TILE_SIZE, height: 2 * TILE_SIZE },
+      { type: 'AIR',   x: 45 * TILE_SIZE, y: 0, width: 2 * TILE_SIZE, height: 2 * TILE_SIZE },
+    ];
+
     return {
       grid,
-      width: WORLD_WIDTH,
-      height: WORLD_HEIGHT,
-      boundaryInset: 60,
+      width: grid[0].length * TILE_SIZE,
+      height: grid.length * TILE_SIZE,
+      boundaryInset: 0,
       platforms: [...buildTerrainPlatforms(grid), ...buttonPlatforms, ...lifts],
       buttons,
       levers: [
-        // Площадка рычага слишком высока для обычного прыжка с моста — Воздух добирается сюда с лифта B двойным прыжком.
-        { id: 'lever-air', x: 500, y: 60, width: 20, height: 40, requiredType: 'AIR', activated: false, action: 'open-upper-gate' },
+        { id: 'lever-yellow', x: 24 * TILE_SIZE, y: 4 * TILE_SIZE, width: TILE_SIZE, height: 2 * TILE_SIZE,
+          requiredType: null, activated: false, action: 'raise-yellow-lift' },
       ],
       gates: [
-        { id: 'upper-final-gate', x: 620, y: 0, width: 20, height: 220, open: false },
-        { id: 'lower-bridge-gate', x: 620, y: 220, width: 20, height: 100, open: false, activationButtonId: 'button-three' },
+        { id: 'green-wall', kind: 'green-wall', x: 12 * TILE_SIZE, y: 7 * TILE_SIZE,
+          width: TILE_SIZE, height: 6 * TILE_SIZE, open: false, activationButtonId: 'button-earth', requiredForVictory: false },
       ],
       zones: [
-        { id: 'lava', name: 'лава', x: 200, y: 560, width: 240, surfaceY: 560, depth: 40, color: '#ed5959', safeFor: ['FIRE'] },
-        { id: 'water', name: 'вода', x: 540, y: 560, width: 240, surfaceY: 560, depth: 40, color: '#41a6d8', safeFor: ['WATER'] },
-        { id: 'acid', name: 'кислота', x: 460, y: 320, width: 40, surfaceY: 320, depth: 40, color: '#8dd841', safeFor: ['EARTH'] },
+        { id: 'lava', name: 'лава', kind: 'lava', x: 12 * TILE_SIZE, y: 27 * TILE_SIZE,
+          width: 9 * TILE_SIZE, surfaceY: 27 * TILE_SIZE, depth: TILE_SIZE, color: '#e53c3c', safeFor: ['FIRE'] },
+        { id: 'water', name: 'вода', kind: 'water', x: 28 * TILE_SIZE, y: 27 * TILE_SIZE,
+          width: 7 * TILE_SIZE, surfaceY: 27 * TILE_SIZE, depth: TILE_SIZE, color: '#4fb0df', safeFor: ['WATER'] },
       ],
       collectibles: [
-        { id: 'fire-star', type: 'FIRE', x: 290, y: 520, size: 20, collected: false },
-        { id: 'water-star', type: 'WATER', x: 620, y: 520, size: 20, collected: false },
-        { id: 'earth-star', type: 'EARTH', x: 465, y: 280, size: 20, collected: false },
-        { id: 'air-star', type: 'AIR', x: 460, y: 65, size: 20, collected: false },
+        { id: 'air-star', type: 'AIR', x: 20 * TILE_SIZE - 10, y: 5 * TILE_SIZE - 10, size: TILE_SIZE, collected: false },
+        { id: 'earth-star', type: 'EARTH', x: 28 * TILE_SIZE - 10, y: 13 * TILE_SIZE - 10, size: TILE_SIZE, collected: false },
+        { id: 'fire-star', type: 'FIRE', x: 18 * TILE_SIZE + 2, y: 25 * TILE_SIZE - 10, size: TILE_SIZE, collected: false },
+        { id: 'water-star', type: 'WATER', x: 31 * TILE_SIZE + 2, y: 25 * TILE_SIZE - 10, size: TILE_SIZE, collected: false },
       ],
-      // Камень стоит на левой площадке; Земля толкает его вправо на третью плиту.
       pushableRock: {
-        x: 420, y: 280, width: 40, height: 40,
-        vx: 0, vy: 0, grounded: false, startX: 420, startY: 280,
+        x: 13 * TILE_SIZE, y: 4 * TILE_SIZE, width: 2 * TILE_SIZE, height: 2 * TILE_SIZE,
+        vx: 0, vy: 0, grounded: false, startX: 13 * TILE_SIZE, startY: 4 * TILE_SIZE,
       },
-      finishes: [
-        { type: 'FIRE',  x: 648, y: 10, width: 44, height: 46 },
-        { type: 'WATER', x: 698, y: 10, width: 44, height: 46 },
-        { type: 'EARTH', x: 750, y: 10, width: 44, height: 46 },
-        { type: 'AIR',   x: 800, y: 10, width: 44, height: 46 },
-      ],
+      finishes,
       playerStarts: [
-        { x: 68, y: 528 }, { x: 102, y: 528 },
-        { x: 136, y: 528 }, { x: 170, y: 528 },
+        { x: 2 * TILE_SIZE, y: 27 * TILE_SIZE - 32 },   // Огонь: левый берег перед лавой.
+        { x: 22 * TILE_SIZE, y: 27 * TILE_SIZE - 32 },  // Вода: центральный островок.
+        { x: 37 * TILE_SIZE, y: 27 * TILE_SIZE - 32 },  // Земля: правый берег.
+        { x: 40 * TILE_SIZE, y: 27 * TILE_SIZE - 32 },  // Воздух: правый берег.
       ],
-      statusText: 'Огонь пересекает лаву и опускает лифт A. Вода удерживает плиту B, Земля ставит камень на плиту C, Воздух двойным прыжком добирается до рычага и нажимает E.',
+      statusText: 'Уровень 2: толкните камень на серую плиту, удерживайте цветные кнопки стихиями своего цвета и используйте жёлтый рычаг, чтобы поднять лифт к выходам.',
     };
   }
 
@@ -748,6 +792,16 @@ export default class Game {
   /** Запускает игру из начального состояния. После результата новый старт
    * начинает новый заход; пауза снимается отдельной кнопкой «Продолжить». */
   start() {
+    // Уровень 3 пока демонстрационный: даже при вызове start/restart из UI
+    // игровой цикл не запускается, а персонажи остаются неподвижными.
+    if (this.levelId === 3) {
+      this.stopLoop();
+      this.input.setActive?.(false);
+      this.input.endFrame?.();
+      this.updateControlButtons();
+      this.render();
+      return;
+    }
     if (document.hidden || this.running) return;
 
     if (this.gameState === 'victory' || this.gameState === 'defeat') {
@@ -762,7 +816,7 @@ export default class Game {
     this.input.setActive?.(true);
     this.input.endFrame?.();
     const startMessage = this.levelId === 2
-      ? 'Уровень 2: Огонь пересекает лаву и опускает лифт A. Вода удерживает плиту B, Земля ставит камень на плиту C, Воздух добирается до рычага.'
+      ? 'Уровень 2: Огонь, Вода, Земля и Воздух удерживают только свои кнопки. Переместите камень на серую плиту и активируйте жёлтый рычаг.'
       : this.levelId === 3
         ? 'Уровень 3: используйте цветные плиты, чтобы открывать связанные ворота. На каждой плите может стоять только разрешённая стихия; помогайте друг другу добраться до выходов.'
         : 'Уровень 1: соберите звёзды, используйте лифты и доведите каждую стихию до своего выхода.';
@@ -945,9 +999,9 @@ export default class Game {
       if (finish) {
         // Во втором уровне выходы не засчитываются, пока команда не решила обе
         // кооперативные задачи: камень удерживает нижние ворота, Воздух открыл верхние.
-        const levelTwoGatesOpen = this.levelId !== 2 || this.gates.every((gate) => gate.open);
+        const levelTwoGatesOpen = this.levelId !== 2 || this.gates.every((gate) => !gate.requiredForVictory || gate.open);
         if (!levelTwoGatesOpen) {
-          const hint = 'Выходы заблокированы: удерживайте плиту камнем и активируйте верхний рычаг.';
+          const hint = 'Сначала выполните обязательные механизмы уровня, затем направьте всех персонажей к выходам.';
           if (this.statusText !== hint) this.setStatus(hint);
         } else {
           player.completed = true;
@@ -1108,6 +1162,8 @@ export default class Game {
       const gate = this.gates.find((item) => item.id === 'upper-final-gate');
       if (gate) gate.open = true;
       this.setStatus('Воздух активировал верхний рычаг. Верхние ворота открыты — команда может подняться к выходам.');
+    } else if (lever.action === 'raise-yellow-lift') {
+      this.setStatus('Жёлтый лифт поднимается к верхней площадке. Помогите остальным подняться к выходам.');
     }
     this.audioManager?.playCharacter('collect', player.type);
   }
@@ -1623,9 +1679,9 @@ export default class Game {
 
   drawLiftFrame(ctx, platform, y, isTarget = false) {
     const isPurple = platform.role === 'purple-lift';
-    const accent = isPurple ? '#d76bea' : '#e1e6ef';
-    const bright = isPurple ? '#ffd0ff' : '#ffffff';
-    const dark = isPurple ? '#632b78' : '#4a5668';
+    const accent = platform.accent ?? (isPurple ? '#d76bea' : '#e1e6ef');
+    const bright = platform.bright ?? (isPurple ? '#ffd0ff' : '#ffffff');
+    const dark = platform.dark ?? (isPurple ? '#632b78' : '#4a5668');
 
     ctx.save();
     ctx.globalAlpha = isTarget ? .58 : 1;
@@ -1644,7 +1700,7 @@ export default class Game {
       return;
     }
 
-    ctx.shadowColor = isPurple ? 'rgba(204, 117, 255, .48)' : 'rgba(228, 238, 255, .35)';
+    ctx.shadowColor = platform.accent ?? (isPurple ? 'rgba(204, 117, 255, .48)' : 'rgba(228, 238, 255, .35)');
     ctx.shadowBlur = platform.enabled ? 13 : 6;
     ctx.fillStyle = '#171d2a';
     ctx.fillRect(platform.x - 2, y - 1, platform.width + 4, platform.height + 5);
@@ -1677,12 +1733,12 @@ export default class Game {
     ctx.fillRect(platform.x + 2, y + 1, platform.width - 4, 2);
     ctx.fillStyle = 'rgba(8, 12, 22, .78)';
     ctx.fillRect(platform.x + 1, y + platform.height - 3, platform.width - 2, 2);
-    ctx.strokeStyle = isPurple ? '#f6b8ff' : '#ffffff';
+    ctx.strokeStyle = isPurple ? '#f6b8ff' : bright;
     ctx.lineWidth = 2.5;
     ctx.strokeRect(platform.x + 1.5, y + 1.5, platform.width - 3, platform.height - 3);
 
     for (const sx of [platform.x + 5, platform.x + platform.width - 8]) {
-      ctx.fillStyle = isPurple ? '#ffd0ff' : '#f5f6fb';
+      ctx.fillStyle = isPurple ? '#ffd0ff' : bright;
       ctx.fillRect(sx, y + Math.max(4, platform.height / 2 - 1.5), 3, 3);
     }
     ctx.restore();
@@ -1714,6 +1770,11 @@ export default class Game {
         const buttonId = platform.activation.slice('button:'.length);
         const switchButton = this.buttons.find((button) => button.id === buttonId);
         shouldMove = Boolean(switchButton?.pressed);
+        platform.targetY = shouldMove ? platform.activatedY : platform.restY;
+      } else if (platform.activation?.startsWith('lever:')) {
+        const leverId = platform.activation.slice('lever:'.length);
+        const lever = this.levers.find((item) => item.id === leverId);
+        shouldMove = Boolean(lever?.activated);
         platform.targetY = shouldMove ? platform.activatedY : platform.restY;
       }
 
@@ -1834,14 +1895,39 @@ export default class Game {
           Math.min(this.width - this.boundaryInset - rock.width, rock.x + delta),
         );
         const candidate = { ...rock, x: nextX };
+        // Камень может заехать на одноклеточную нажимную плиту, даже если
+        // приземлился на полу рядом с ней. Это нужно для серой плиты уровня 2:
+        // она расположена на одну клетку выше нижней площадки.
+        let stepPlate = null;
+        for (const platform of this.getCollisionPlatforms()) {
+          if (platform.type !== 'button-platform') continue;
+          const overlapsHorizontally = candidate.x < platform.x + platform.width &&
+            candidate.x + candidate.width > platform.x;
+          const rise = rock.y + rock.height - platform.y;
+          if (overlapsHorizontally && rise > 0 && rise <= TILE_SIZE + 1) {
+            const steppedCandidate = { ...candidate, y: platform.y - rock.height };
+            const blockedAbove = this.getCollisionPlatforms().some((other) =>
+              other !== platform && this.intersects(steppedCandidate, other),
+            );
+            if (!blockedAbove) {
+              stepPlate = platform;
+              candidate.y = steppedCandidate.y;
+              break;
+            }
+          }
+        }
         // Пол/платформа под камнем касается его нижней грани, но не мешает
-        // скольжению по поверхности. Препятствием считается только реальное
-        // пересечение камня с другой платформой или стеной.
+        // скольжению по поверхности. Проверяем боковые препятствия и верх плиты.
         const blocked = this.getCollisionPlatforms().some((platform) =>
-          this.intersects(candidate, platform),
+          platform !== stepPlate && this.intersects(candidate, platform),
         );
         if (!blocked && Math.abs(nextX - rock.x) > 0.001) {
           rock.x = nextX;
+          if (stepPlate) {
+            rock.y = candidate.y;
+            rock.vy = 0;
+            rock.grounded = true;
+          }
           moved = true;
         }
       }
@@ -1870,7 +1956,7 @@ export default class Game {
         platform.height = button.height;
       }
 
-      const standingOnButton = this.players.some((player) => {
+      const standingOnButton = !button.rockOnly && this.players.some((player) => {
         if (player.completed || !player.grounded) return false;
         if (button.requiredType && player.type !== button.requiredType) return false;
         if (button.allowedTypes?.length && !button.allowedTypes.includes(player.type)) return false;
@@ -1947,6 +2033,27 @@ export default class Game {
     // которые блокируют проход персонажам.
     for (const gate of this.gates) {
       if (gate.open) continue;
+      if (gate.kind === 'green-wall') {
+        ctx.save();
+        ctx.shadowColor = '#5b9952';
+        ctx.shadowBlur = 7;
+        const wall = ctx.createLinearGradient(gate.x, gate.y, gate.x + gate.width, gate.y + gate.height);
+        wall.addColorStop(0, '#8fc77b');
+        wall.addColorStop(.45, '#5b9952');
+        wall.addColorStop(1, '#294d2e');
+        ctx.fillStyle = wall;
+        ctx.fillRect(gate.x, gate.y, gate.width, gate.height);
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#b8e6a7';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(gate.x + .5, gate.y + .5, gate.width - 1, gate.height - 1);
+        for (let y = gate.y + 8; y < gate.y + gate.height; y += 14) {
+          ctx.fillStyle = 'rgba(15, 48, 22, .55)';
+          ctx.fillRect(gate.x + 3, y, gate.width - 6, 2);
+        }
+        ctx.restore();
+        continue;
+      }
       ctx.save();
       const glow = gate.activationButtonId ? '#d66bf2' : '#ffc85a';
       ctx.shadowColor = glow;
